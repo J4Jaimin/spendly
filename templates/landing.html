@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Spendly — Track Every Rupee{% endblock %}
+
+{% block head %}
+<style>
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 15, 15, 0.6);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 2rem;
+    }
+
+    .modal-overlay.is-open { display: flex; }
+
+    .modal-content {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        background: var(--paper-card);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-close {
+        position: absolute;
+        top: -1rem;
+        right: -1rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        background: var(--ink);
+        color: var(--paper);
+        border: none;
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-video-wrap {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background: #000;
+    }
+
+    .modal-video-wrap iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Free to use · No credit card needed
+        </div>
+        <h1 class="hero-title">
+            Track every rupee.
+            <span class="hero-title-accent">Know where it goes.</span>
+        </h1>
+        <p class="hero-subtitle">
+            Spendly helps you log expenses, spot patterns, and stay
+            on budget — without the spreadsheet headache.
+        </p>
+        <div class="hero-actions">
+            <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
+            <a href="#" id="how-it-works-btn" class="btn-primary">See how it works</a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="mock-card">
+            <div class="mock-card-dots">
+                <span class="mock-dot mock-dot-red"></span>
+                <span class="mock-dot mock-dot-yellow"></span>
+                <span class="mock-dot mock-dot-green"></span>
+            </div>
+            <div class="mock-stats">
+                <div class="mock-stat">
+                    <span class="mock-stat-label">This month</span>
+                    <span class="mock-stat-value">₹18,240</span>
+                    <span class="mock-stat-change mock-stat-change-negative">+12% vs last</span>
+                </div>
+                <div class="mock-stat">
+                    <span class="mock-stat-label">Budget left</span>
+                    <span class="mock-stat-value">₹6,760</span>
+                    <span class="mock-stat-change mock-stat-change-positive">43% remaining</span>
+                </div>
+                <div class="mock-stat">
+                    <span class="mock-stat-label">Transactions</span>
+                    <span class="mock-stat-value">34</span>
+                    <span class="mock-stat-change mock-stat-change-neutral">this month</span>
+                </div>
+            </div>
+            <div class="mock-bars">
+                <div class="mock-bar-row">
+                    <span class="mock-cat">Food</span>
+                    <div class="mock-bar-track">
+                        <div class="mock-bar mock-bar-food" style="width: 75%"></div>
+                    </div>
+                </div>
+                <div class="mock-bar-row">
+                    <span class="mock-cat">Travel</span>
+                    <div class="mock-bar-track">
+                        <div class="mock-bar mock-bar-travel" style="width: 55%"></div>
+                    </div>
+                </div>
+                <div class="mock-bar-row">
+                    <span class="mock-cat">Bills</span>
+                    <div class="mock-bar-track">
+                        <div class="mock-bar mock-bar-bills" style="width: 40%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="features-inner">
+        <div class="feature-card">
+            <div class="feature-icon">₹</div>
+            <h3 class="feature-title">Log expenses instantly</h3>
+            <p class="feature-body">Add any expense in seconds. Category, amount, date, description — all in one simple form.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">◎</div>
+            <h3 class="feature-title">Understand your patterns</h3>
+            <p class="feature-body">See exactly where your money goes with category breakdowns and monthly summaries.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">◷</div>
+            <h3 class="feature-title">Filter by time period</h3>
+            <p class="feature-body">View your spending for any date range — last week, last month, or a custom period.</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="cta-inner">
+        <h2 class="cta-title">Ready to take control?</h2>
+        <p class="cta-body">Join thousands of people who track their expenses with Spendly.</p>
+        <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
+    </div>
+</section>
+
+<div class="modal-overlay" id="how-it-works-overlay">
+    <div class="modal-content">
+        <button type="button" class="modal-close" id="how-it-works-close" aria-label="Close video">&times;</button>
+        <div class="modal-video-wrap">
+            <iframe
+                id="how-it-works-video"
+                data-src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0"
+                src=""
+                title="How Spendly works"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var overlay = document.getElementById('how-it-works-overlay');
+    var openBtn = document.getElementById('how-it-works-btn');
+    var closeBtn = document.getElementById('how-it-works-close');
+    var iframe = document.getElementById('how-it-works-video');
+
+    function openModal(event) {
+        event.preventDefault();
+        iframe.src = iframe.dataset.src;
+        overlay.classList.add('is-open');
+    }
+
+    function closeModal() {
+        overlay.classList.remove('is-open');
+        iframe.src = '';
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', function (event) {
+        if (event.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+})();
+</script>
+{% endblock %}
