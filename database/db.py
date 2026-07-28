@@ -91,6 +91,39 @@ def seed_db():
         conn.close()
 
 
+def get_user_by_email(email):
+    """Return the user row matching email, or None if no such user."""
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def create_user(name, email, password):
+    """Insert a new user with a hashed password.
+
+    Returns the new user's id on success, or None if the email is
+    already taken (race-condition safety net alongside the caller's
+    pre-check via get_user_by_email).
+    """
+    password_hash = generate_password_hash(password)
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+            (name, email, password_hash),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except sqlite3.IntegrityError:
+        return None
+    finally:
+        conn.close()
+
+
 def _build_sample_expenses(user_id):
     """Return 8 (user_id, amount, category, date, description) rows.
 
