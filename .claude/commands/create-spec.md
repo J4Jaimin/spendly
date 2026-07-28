@@ -1,12 +1,12 @@
 ---
 description: Generate a spec document for a given implementation step/feature, following CLAUDE.md and the existing spec format
 argument-hint: "<step_number> <feature_name>"
-allowed-tools: Read, Write, Glob, Grep, Task
+allowed-tools: Read, Write, Glob, Grep, Task, Bash(git:*)
 ---
 
 # Create Spec Document
 
-Generate a new spec doc for one feature/step of the Spendly roadmap. This command only **writes a planning document** — it must never implement the feature, and must never touch `app.py`, `database/db.py`, templates, or static files.
+Generate a new spec doc for one feature/step of the Spendly roadmap. This command only **writes a planning document** — it must never implement the feature, and must never touch `app.py`, `database/db.py`, templates, or static files. It also performs one manual git setup task: getting the repo onto a clean, up-to-date feature branch before the spec is written.
 
 Arguments (parse from: $ARGUMENTS), in this order: `<step_number> <feature_name>`
 - `step_number` — the implementation step this feature corresponds to (see the route table in CLAUDE.md)
@@ -16,9 +16,22 @@ Arguments (parse from: $ARGUMENTS), in this order: `<step_number> <feature_name>
 
 - Require both arguments. If either is missing, stop and print usage: `/create-spec <step_number> <feature_name>` — don't guess a default.
 - `step_number` must parse as a positive integer.
-- `feature_name` must be non-empty after trimming. Slugify it for the filename: lowercase, spaces/underscores → hyphens, strip anything else that isn't `a-z0-9-`.
+- `feature_name` must be non-empty after trimming. Slugify it for the filename: lowercase, spaces/underscores → hyphens, strip anything else that isn't `a-z0-9-`. Reuse this exact slug later for the git branch name.
 
-## 1. Ground the spec in current project state — delegate to the Explore subagent, don't assume
+## 1. Git workspace check — must happen before anything else touches files
+
+Run `git status --porcelain` first.
+
+- **If it reports any changes** (staged, unstaged, or untracked — output is non-empty): **stop here.** Do not pull, do not create a branch, do not write the spec. Report to the user the list of changed/untracked files (from `git status`) and tell them these need to be committed or stashed before running `/create-spec` again. Committing or stashing on the user's behalf is a manual task for them — never do it automatically.
+- **If the tree is clean** (output is empty): proceed —
+  1. Check the current branch (`git branch --show-current`). If it isn't `main`, check out `main` (`git checkout main`) — safe since the tree is already confirmed clean.
+  2. Pull the latest `main`: `git pull`. If this fails for any reason (diverged history, no upstream configured, network error, merge conflict) — stop and report the exact git error; do not force-push, force-merge, or otherwise work around it.
+  3. Create and switch to a new feature branch: `git checkout -b feature/<feature-slug>` (the same slug from §0, e.g. `feature_name="expenses add"` → `feature/expenses-add`).
+     - If a local branch with that exact name already exists, do not force-overwrite or silently reuse it — stop and ask the user whether to check it out as-is or pick a different feature name.
+
+Only once the new feature branch is checked out does spec-writing (§2 onward) proceed, so the new spec file lands as the first commit-worthy change on the new branch, not on `main`.
+
+## 2. Ground the spec in current project state — delegate to the Explore subagent, don't assume
 
 Before writing anything, use the Explore subagent to gather, in this order:
 
@@ -27,7 +40,7 @@ Before writing anything, use the Explore subagent to gather, in this order:
 3. Read `.claude/specs/01_database-setup.md` in full — this is the existing spec and the canonical formatting template. The new spec must follow the same structure: numbered `##` sections separated by `---` rules, markdown tables for schema, a checklist for "Definition of Done".
 4. Read the current state of whatever the feature will actually touch — the relevant route stub in `app.py`, any existing template in `templates/`, relevant helpers in `database/db.py` — so the spec reflects what's really there today, not stale assumptions (CLAUDE.md itself can drift, as seen before).
 
-## 2. Analyse edge cases for the feature
+## 3. Analyse edge cases for the feature
 
 Based on what the feature actually is, think through and document the edge cases relevant to it. Adapt to the real feature — don't copy this list blindly, use it as a prompt:
 
@@ -36,7 +49,7 @@ Based on what the feature actually is, think through and document the edge cases
 - **Any DB-touching feature**: parameterized queries only, `PRAGMA foreign_keys = ON` implications, uniqueness constraints, matching the exact existing schema — call out explicitly if the feature requires a schema change rather than quietly assuming new columns.
 - **Any route feature**: `url_for()` for every internal link in templates, `abort()` for HTTP errors instead of raw string returns, one-responsibility route functions per CLAUDE.md's code style section.
 
-## 3. Write the spec file
+## 4. Write the spec file
 
 - Path: `.claude/specs/<NN>_<feature-slug>.md`, where `<NN>` is `step_number` zero-padded to 2 digits (e.g. `03_logout.md`, `07_expenses-add.md`) — matches the existing `01_database-setup.md` naming convention.
 - **If a spec file already exists at that path**, do not silently overwrite it. Show the user a summary of what exists vs. what the new content would be, and ask for confirmation before replacing it.
@@ -56,8 +69,8 @@ Based on what the feature actually is, think through and document the edge cases
   13. Definition of Done
 - In the **Overview** section, include this line near the top: **"Reference: see `CLAUDE.md` for full project architecture, code style, and tech constraints — this spec must stay consistent with it."**
 - In **Rules for Implementation**, restate only the specific CLAUDE.md constraints that actually apply to this feature (e.g. Flask-only, SQLite-only via `database/db.py`, vanilla JS only, no new pip packages, parameterized queries, `url_for()` everywhere, `abort()` for errors, port 5001) — don't paste the whole file, just what's relevant to this feature.
-- Populate **Error Handling Expectations** and **Definition of Done** using the edge cases identified in step 2.
+- Populate **Error Handling Expectations** and **Definition of Done** using the edge cases identified in step 3.
 
-## 4. Report
+## 5. Report
 
-Tell the user: the file path written, the step-number ↔ CLAUDE.md cross-check result (match or mismatch, and what the mismatch was if any), and a short bullet list of the key edge cases the spec captures. Do not implement any part of the feature, and do not modify `app.py`, `database/db.py`, templates, or CLAUDE.md as a side effect — this command only produces the spec document.
+Tell the user: whether the git workspace check passed or stopped early (and why, if it stopped), which branch the spec was written on, the file path written, the step-number ↔ CLAUDE.md cross-check result (match or mismatch, and what the mismatch was if any), and a short bullet list of the key edge cases the spec captures. Do not implement any part of the feature, and do not modify `app.py`, `database/db.py`, templates, or CLAUDE.md as a side effect — this command only produces the spec document (plus the git branch setup in §1).
