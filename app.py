@@ -1,6 +1,12 @@
+from datetime import datetime
+
 from flask import Flask, render_template, request, redirect, url_for, session
 
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, authenticate_user
+from database.db import (
+    get_db, init_db, seed_db, create_user, get_user_by_email, authenticate_user,
+    get_user_by_id, get_expense_summary, get_category_breakdown, get_recent_expenses,
+    get_top_expenses, get_month_over_month_summary,
+)
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key-change-in-production"  # dev-only; no secrets management yet
@@ -69,7 +75,7 @@ def login():
         return render_template("login.html", error="Invalid email or password.")
 
     session["user_id"] = user["id"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/terms")
@@ -92,9 +98,99 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _format_inr(amount):
+    """Format a number as rupees using Indian digit grouping, e.g. 123456.7 -> '₹1,23,456.70'."""
+    sign = "-" if amount < 0 else ""
+    rupees, paise = divmod(round(abs(amount) * 100), 100)
+    digits = str(rupees)
+    if len(digits) > 3:
+        last3, rest = digits[-3:], digits[:-3]
+        groups = []
+        while len(rest) > 2:
+            groups.insert(0, rest[-2:])
+            rest = rest[:-2]
+        if rest:
+            groups.insert(0, rest)
+        digits = ",".join(groups) + "," + last3
+    return f"{sign}₹{digits}.{paise:02d}"
+
+
+def _format_display_date(value):
+    """Format a stored 'YYYY-MM-DD[...]' string as '25 Jul 2026'."""
+    return datetime.strptime(value[:10], "%Y-%m-%d").strftime("%d %b %Y")
+
+
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(session["user_id"])
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    summary = get_expense_summary(user["id"])
+    categories = get_category_breakdown(user["id"])
+    recent_expenses = get_recent_expenses(user["id"], limit=5)
+    top_expenses = get_top_expenses(user["id"], limit=5)
+    month_over_month = get_month_over_month_summary(user["id"])
+
+    average = summary["total"] / summary["count"] if summary["count"] > 0 else 0
+
+    this_month_total = month_over_month["this_month_total"]
+    last_month_total = month_over_month["last_month_total"]
+    if last_month_total > 0:
+        change_pct = (this_month_total - last_month_total) / last_month_total * 100
+        if change_pct > 0:
+            month_delta = {"text": f"{change_pct:.0f}% more than last month", "direction": "up"}
+        elif change_pct < 0:
+            month_delta = {"text": f"{abs(change_pct):.0f}% less than last month", "direction": "down"}
+        else:
+            month_delta = {"text": "Same as last month", "direction": "flat"}
+    elif this_month_total > 0:
+        month_delta = {"text": "No spending last month", "direction": "up"}
+    else:
+        month_delta = {"text": "No spending yet", "direction": "flat"}
+
+    return render_template(
+        "profile.html",
+        user=user,
+        member_since=_format_display_date(user["created_at"]),
+        summary={
+            "count": summary["count"],
+            "total_display": _format_inr(summary["total"]),
+            "average_display": _format_inr(average),
+        },
+        categories=[
+            {**cat, "total_display": _format_inr(cat["total"])}
+            for cat in categories
+        ],
+        recent_expenses=[
+            {
+                "date_display": _format_display_date(expense["date"]),
+                "category": expense["category"],
+                "description": expense["description"] or "",
+                "amount_display": _format_inr(expense["amount"]),
+            }
+            for expense in recent_expenses
+        ],
+        top_expenses=[
+            {
+                "date_display": _format_display_date(expense["date"]),
+                "category": expense["category"],
+                "description": expense["description"] or "",
+                "amount_display": _format_inr(expense["amount"]),
+            }
+            for expense in top_expenses
+        ],
+        month_summary={
+            "this_month_label": month_over_month["this_month_label"],
+            "this_month_display": _format_inr(this_month_total),
+            "delta_text": month_delta["text"],
+            "delta_direction": month_delta["direction"],
+        },
+    )
 
 
 @app.route("/expenses/add")

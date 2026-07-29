@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-section">
+    <div class="page-container">
+
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">{{ user.name }}</h1>
+                <p class="page-subtitle">{{ user.email }} · Member since {{ member_since }}</p>
+            </div>
+        </header>
+
+        <div class="stat-grid">
+            <div class="stat-card">
+                <span class="stat-label">Expenses logged</span>
+                <span class="stat-value">{{ summary.count }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total spent</span>
+                <span class="stat-value">{{ summary.total_display }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Average expense</span>
+                <span class="stat-value">{{ summary.average_display }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">{{ month_summary.this_month_label }} so far</span>
+                <span class="stat-value">{{ month_summary.this_month_display }}</span>
+                <span class="stat-delta stat-delta-{{ month_summary.delta_direction }}">{{ month_summary.delta_text }}</span>
+            </div>
+        </div>
+
+        {% if summary.count == 0 %}
+        <div class="empty-state">
+            <span class="empty-icon">{{ icon('receipt') }}</span>
+            <h2 class="empty-title">No expenses yet</h2>
+            <p class="empty-body">Once you log an expense, your spending by category and recent activity will show up here.</p>
+        </div>
+        {% else %}
+        <div class="two-col">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Spending by category</h2>
+                </div>
+                <div class="profile-bars">
+                    {% for cat in categories %}
+                    <div class="profile-bar-row">
+                        <span class="cat-tag">
+                            <span class="cat-dot cat-dot-{{ cat.category | lower }}"></span>{{ cat.category }}
+                        </span>
+                        <div class="bar-track">
+                            <div class="bar-fill cat-fill-{{ cat.category | lower }}" style="width: {{ cat.percentage }}%"></div>
+                        </div>
+                        <span class="profile-bar-amount">{{ cat.total_display }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Recent expenses</h2>
+                </div>
+                <div class="recent-list">
+                    {% for expense in recent_expenses %}
+                    <div class="recent-row">
+                        <span class="recent-date">{{ expense.date_display }}</span>
+                        <span class="cat-tag">
+                            <span class="cat-dot cat-dot-{{ expense.category | lower }}"></span>{{ expense.category }}
+                        </span>
+                        <span class="recent-description">{{ expense.description }}</span>
+                        <span class="recent-amount">{{ expense.amount_display }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="panel profile-top-expenses">
+            <div class="panel-header">
+                <h2 class="panel-title">Top expenses</h2>
+            </div>
+            <div class="recent-list">
+                {% for expense in top_expenses %}
+                <div class="recent-row">
+                    <span class="recent-date">{{ expense.date_display }}</span>
+                    <span class="cat-tag">
+                        <span class="cat-dot cat-dot-{{ expense.category | lower }}"></span>{{ expense.category }}
+                    </span>
+                    <span class="recent-description">{{ expense.description }}</span>
+                    <span class="recent-amount">{{ expense.amount_display }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}
