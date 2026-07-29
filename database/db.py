@@ -6,7 +6,7 @@ module instead.
 """
 import calendar
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -100,6 +100,138 @@ def get_user_by_email(email):
         ).fetchone()
     finally:
         conn.close()
+
+
+def get_user_by_id(user_id):
+    """Return the user row matching id, or None if no such user."""
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT * FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def get_expense_summary(user_id):
+    """Return {"count": int, "total": float} for a user's expenses."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            """
+            SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total
+            FROM expenses WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+        return {"count": row["count"], "total": row["total"]}
+    finally:
+        conn.close()
+
+
+def get_category_breakdown(user_id):
+    """Return per-category totals for a user across all fixed CATEGORIES.
+
+    Each entry has "category", "total", and "percentage" (share of the
+    user's overall spend), sorted by total descending. Categories with
+    no expenses are zero-filled rather than omitted.
+    """
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT category, COALESCE(SUM(amount), 0) AS total
+            FROM expenses WHERE user_id = ? GROUP BY category
+            """,
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    totals_by_category = {row["category"]: row["total"] for row in rows}
+    grand_total = sum(totals_by_category.values())
+
+    breakdown = []
+    for category in CATEGORIES:
+        total = totals_by_category.get(category, 0)
+        percentage = (total / grand_total * 100) if grand_total > 0 else 0
+        breakdown.append({
+            "category": category,
+            "total": total,
+            "percentage": percentage,
+        })
+
+    breakdown.sort(key=lambda entry: entry["total"], reverse=True)
+    return breakdown
+
+
+def get_recent_expenses(user_id, limit=5):
+    """Return a user's most recent expenses, newest first."""
+    conn = get_db()
+    try:
+        return conn.execute(
+            """
+            SELECT * FROM expenses WHERE user_id = ?
+            ORDER BY date DESC, created_at DESC LIMIT ?
+            """,
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def get_top_expenses(user_id, limit=5):
+    """Return a user's largest expenses by amount, biggest first."""
+    conn = get_db()
+    try:
+        return conn.execute(
+            """
+            SELECT * FROM expenses WHERE user_id = ?
+            ORDER BY amount DESC, date DESC LIMIT ?
+            """,
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def get_month_over_month_summary(user_id):
+    """Return this-vs-last calendar month spend for a user.
+
+    Returns {"this_month_label", "this_month_total",
+    "last_month_label", "last_month_total"}, both totals COALESCE-guarded
+    against NULL for a month with zero expenses.
+    """
+    today = date.today()
+    last_month_date = today.replace(day=1) - timedelta(days=1)
+    this_month_key = today.strftime("%Y-%m")
+    last_month_key = last_month_date.strftime("%Y-%m")
+
+    conn = get_db()
+    try:
+        this_total = conn.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0) AS total FROM expenses
+            WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+            """,
+            (user_id, this_month_key),
+        ).fetchone()["total"]
+        last_total = conn.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0) AS total FROM expenses
+            WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+            """,
+            (user_id, last_month_key),
+        ).fetchone()["total"]
+    finally:
+        conn.close()
+
+    return {
+        "this_month_label": today.strftime("%B"),
+        "this_month_total": this_total,
+        "last_month_label": last_month_date.strftime("%B"),
+        "last_month_total": last_total,
+    }
 
 
 def authenticate_user(email, password):
