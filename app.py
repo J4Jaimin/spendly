@@ -12,6 +12,19 @@ app = Flask(__name__)
 app.secret_key = "dev-secret-key-change-in-production"  # dev-only; no secrets management yet
 
 
+@app.after_request
+def add_no_cache_headers(response):
+    """Prevent the browser from serving cached pages via back/forward nav.
+
+    Without this, the browser back-button cache (bfcache) can redisplay a
+    page like /login or /profile without a fresh request, bypassing the
+    session checks in the route functions below.
+    """
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
@@ -24,7 +37,7 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "GET":
         return render_template("register.html")
@@ -59,7 +72,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "GET":
         return render_template("login.html")
