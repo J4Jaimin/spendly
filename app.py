@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from database.db import (
     get_db, init_db, seed_db, create_user, get_user_by_email, authenticate_user,
     get_user_by_id, get_expense_summary, get_category_breakdown, get_recent_expenses,
-    get_all_expenses, get_month_over_month_summary,
+    get_all_expenses, get_available_expense_months, get_month_over_month_summary,
 )
 
 app = Flask(__name__)
@@ -146,7 +146,21 @@ def profile():
     summary = get_expense_summary(user["id"])
     categories = get_category_breakdown(user["id"])
     recent_expenses = get_recent_expenses(user["id"], limit=3)
-    all_expenses = get_all_expenses(user["id"])
+
+    raw_month = request.args.get("month")
+    month = None
+    selected_month_label = None
+    if raw_month:
+        try:
+            parsed_month = datetime.strptime(raw_month, "%Y-%m")
+        except ValueError:
+            parsed_month = None
+        if parsed_month is not None:
+            month = parsed_month.strftime("%Y-%m")
+            selected_month_label = parsed_month.strftime("%B %Y")
+
+    available_months = get_available_expense_months(user["id"])
+    all_expenses = get_all_expenses(user["id"], month=month)
     month_over_month = get_month_over_month_summary(user["id"])
 
     average = summary["total"] / summary["count"] if summary["count"] > 0 else 0
@@ -201,6 +215,9 @@ def profile():
             }
             for expense in all_expenses
         ],
+        selected_month=month,
+        selected_month_label=selected_month_label,
+        available_months=available_months,
         month_summary={
             "this_month_label": month_over_month["this_month_label"],
             "this_month_display": _format_inr(this_month_total),

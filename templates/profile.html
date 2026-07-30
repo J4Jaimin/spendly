@@ -97,8 +97,27 @@
         <div class="panel profile-all-expenses">
             <div class="panel-header">
                 <h2 class="panel-title">All expenses</h2>
+                {% if selected_month_label %}
+                <span class="panel-header-meta">Showing {{ selected_month_label }}</span>
+                {% endif %}
             </div>
+
+            <form class="filter-bar" method="GET" action="{{ url_for('profile') }}">
+                <label class="filter-bar-label" for="month-filter-select">Filter by month</label>
+                <select class="form-input" name="month" id="month-filter-select">
+                    <option value="" {% if not selected_month %}selected{% endif %}>All time</option>
+                    {% for month_option in available_months %}
+                    <option value="{{ month_option.value }}" {% if month_option.value == selected_month %}selected{% endif %}>{{ month_option.label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-ghost">Apply</button>
+                {% if selected_month %}
+                <a href="{{ url_for('profile') }}" class="filter-bar-clear">Clear filter</a>
+                {% endif %}
+            </form>
+
             <div class="recent-list">
+                {% if all_expenses %}
                 {% for expense in all_expenses %}
                 <div class="recent-row">
                     <span class="recent-date">{{ expense.date_display }}</span>
@@ -109,6 +128,17 @@
                     <span class="recent-amount">{{ expense.amount_display }}</span>
                 </div>
                 {% endfor %}
+                {% else %}
+                <div class="panel-empty-state">
+                    <span class="panel-empty-icon">{{ icon('receipt') }}</span>
+                    <p class="panel-empty-text">
+                        {% if selected_month_label %}No expenses in {{ selected_month_label }}.{% else %}No expenses to show.{% endif %}
+                    </p>
+                    {% if selected_month %}
+                    <a href="{{ url_for('profile') }}" class="btn-ghost">Clear filter</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
         {% endif %}

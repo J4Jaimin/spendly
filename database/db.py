@@ -6,7 +6,7 @@ module instead.
 """
 import calendar
 import sqlite3
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -180,10 +180,25 @@ def get_recent_expenses(user_id, limit=5):
         conn.close()
 
 
-def get_all_expenses(user_id):
-    """Return a user's entire expense history, newest first."""
+def get_all_expenses(user_id, month=None):
+    """Return a user's expense history, newest first.
+
+    Pass month as a "YYYY-MM" string (already validated by the caller —
+    this function trusts it and does not re-validate format) to restrict
+    results to that calendar month. Omitting it, or passing None,
+    returns the full unfiltered history, identical to before.
+    """
     conn = get_db()
     try:
+        if month:
+            return conn.execute(
+                """
+                SELECT * FROM expenses WHERE user_id = ?
+                AND strftime('%Y-%m', date) = ?
+                ORDER BY date DESC, created_at DESC
+                """,
+                (user_id, month),
+            ).fetchall()
         return conn.execute(
             """
             SELECT * FROM expenses WHERE user_id = ?
@@ -193,6 +208,34 @@ def get_all_expenses(user_id):
         ).fetchall()
     finally:
         conn.close()
+
+
+def get_available_expense_months(user_id):
+    """Return the distinct calendar months a user has expenses in.
+
+    Newest first: [{"value": "2026-07", "label": "July 2026"}, ...].
+    Empty list if the user has no expenses at all.
+    """
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT strftime('%Y-%m', date) AS month
+            FROM expenses WHERE user_id = ?
+            ORDER BY month DESC
+            """,
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    return [
+        {
+            "value": row["month"],
+            "label": datetime.strptime(row["month"], "%Y-%m").strftime("%B %Y"),
+        }
+        for row in rows
+    ]
 
 
 def get_month_over_month_summary(user_id):
