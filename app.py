@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from database.db import (
     get_db, init_db, seed_db, create_user, get_user_by_email, authenticate_user,
     get_user_by_id, get_expense_summary, get_category_breakdown, get_recent_expenses,
-    get_top_expenses, get_month_over_month_summary,
+    get_all_expenses, get_month_over_month_summary,
 )
 
 app = Flask(__name__)
@@ -132,8 +132,8 @@ def profile():
 
     summary = get_expense_summary(user["id"])
     categories = get_category_breakdown(user["id"])
-    recent_expenses = get_recent_expenses(user["id"], limit=5)
-    top_expenses = get_top_expenses(user["id"], limit=5)
+    recent_expenses = get_recent_expenses(user["id"], limit=3)
+    all_expenses = get_all_expenses(user["id"])
     month_over_month = get_month_over_month_summary(user["id"])
 
     average = summary["total"] / summary["count"] if summary["count"] > 0 else 0
@@ -166,6 +166,10 @@ def profile():
             {**cat, "total_display": _format_inr(cat["total"])}
             for cat in categories
         ],
+        top_category={
+            **categories[0],
+            "total_display": _format_inr(categories[0]["total"]),
+        },
         recent_expenses=[
             {
                 "date_display": _format_display_date(expense["date"]),
@@ -175,14 +179,14 @@ def profile():
             }
             for expense in recent_expenses
         ],
-        top_expenses=[
+        all_expenses=[
             {
                 "date_display": _format_display_date(expense["date"]),
                 "category": expense["category"],
                 "description": expense["description"] or "",
                 "amount_display": _format_inr(expense["amount"]),
             }
-            for expense in top_expenses
+            for expense in all_expenses
         ],
         month_summary={
             "this_month_label": month_over_month["this_month_label"],

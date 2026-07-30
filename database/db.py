@@ -180,16 +180,16 @@ def get_recent_expenses(user_id, limit=5):
         conn.close()
 
 
-def get_top_expenses(user_id, limit=5):
-    """Return a user's largest expenses by amount, biggest first."""
+def get_all_expenses(user_id):
+    """Return a user's entire expense history, newest first."""
     conn = get_db()
     try:
         return conn.execute(
             """
             SELECT * FROM expenses WHERE user_id = ?
-            ORDER BY amount DESC, date DESC LIMIT ?
+            ORDER BY date DESC, created_at DESC
             """,
-            (user_id, limit),
+            (user_id,),
         ).fetchall()
     finally:
         conn.close()

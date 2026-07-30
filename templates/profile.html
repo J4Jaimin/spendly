@@ -48,6 +48,34 @@
         <div class="two-col">
             <div class="panel">
                 <div class="panel-header">
+                    <h2 class="panel-title">Recent expenses</h2>
+                </div>
+                <div class="top-category-summary">
+                    <span class="top-category-label">Top category</span>
+                    <div class="top-category-body">
+                        <span class="cat-tag">
+                            <span class="cat-dot cat-dot-{{ top_category.category | lower }}"></span>{{ top_category.category }}
+                        </span>
+                        <span class="top-category-amount">{{ top_category.total_display }}</span>
+                        <span class="top-category-share">{{ top_category.percentage }}% of total spend</span>
+                    </div>
+                </div>
+                <div class="recent-list">
+                    {% for expense in recent_expenses %}
+                    <div class="recent-row">
+                        <span class="recent-date">{{ expense.date_display }}</span>
+                        <span class="cat-tag">
+                            <span class="cat-dot cat-dot-{{ expense.category | lower }}"></span>{{ expense.category }}
+                        </span>
+                        <span class="recent-description">{{ expense.description }}</span>
+                        <span class="recent-amount">{{ expense.amount_display }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
                     <h2 class="panel-title">Spending by category</h2>
                 </div>
                 <div class="profile-bars">
@@ -64,32 +92,14 @@
                     {% endfor %}
                 </div>
             </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">Recent expenses</h2>
-                </div>
-                <div class="recent-list">
-                    {% for expense in recent_expenses %}
-                    <div class="recent-row">
-                        <span class="recent-date">{{ expense.date_display }}</span>
-                        <span class="cat-tag">
-                            <span class="cat-dot cat-dot-{{ expense.category | lower }}"></span>{{ expense.category }}
-                        </span>
-                        <span class="recent-description">{{ expense.description }}</span>
-                        <span class="recent-amount">{{ expense.amount_display }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
         </div>
 
-        <div class="panel profile-top-expenses">
+        <div class="panel profile-all-expenses">
             <div class="panel-header">
-                <h2 class="panel-title">Top expenses</h2>
+                <h2 class="panel-title">All expenses</h2>
             </div>
             <div class="recent-list">
-                {% for expense in top_expenses %}
+                {% for expense in all_expenses %}
                 <div class="recent-row">
                     <span class="recent-date">{{ expense.date_display }}</span>
                     <span class="cat-tag">

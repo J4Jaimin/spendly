@@ -2,8 +2,49 @@
    Shared component classes (.page-section, .stat-grid, .panel, .bar-track,
    .empty-state, .cat-tag, etc.) live in style.css. */
 
-.profile-top-expenses {
+.profile-all-expenses {
     margin-top: 1.5rem;
+}
+
+.profile-all-expenses .recent-list {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.top-category-summary {
+    background: var(--paper-warm);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+.top-category-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.6rem;
+}
+
+.top-category-body {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+}
+
+.top-category-amount {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.top-category-share {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
 }
 
 .profile-bars {
