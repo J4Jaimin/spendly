@@ -1,0 +1,38 @@
+/* Add-expense page — layout specific to /expenses/add.
+   Shared component classes (.page-section, .page-container, .page-header,
+   .page-title, .form-group, .form-input, .btn-submit, .btn-ghost, .panel)
+   live in style.css. */
+
+.expenses-add-container {
+    max-width: 32rem;
+}
+
+.expenses-add-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.field-optional {
+    color: var(--ink-muted);
+    font-weight: 400;
+}
+
+.field-error {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--danger);
+}
+
+@media (max-width: 600px) {
+    .expenses-add-actions {
+        flex-direction: column-reverse;
+    }
+    .expenses-add-actions .btn-ghost,
+    .expenses-add-actions .btn-submit {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -6,6 +6,7 @@ from database.db import (
     get_db, init_db, seed_db, create_user, get_user_by_email, authenticate_user,
     get_user_by_id, get_expense_summary, get_category_breakdown, get_recent_expenses,
     get_all_expenses, get_available_expense_months, get_month_over_month_summary,
+    CATEGORIES, create_expense,
 )
 
 app = Flask(__name__)
@@ -227,9 +228,77 @@ def profile():
     )
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(session["user_id"])
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template(
+            "expenses_add.html",
+            categories=CATEGORIES,
+            errors={},
+            form_values={"amount": "", "category": "", "date": "", "description": ""},
+        )
+
+    amount_raw = request.form.get("amount", "").strip()
+    category_raw = request.form.get("category", "").strip()
+    date_raw = request.form.get("date", "").strip()
+    description_raw = request.form.get("description", "").strip()
+
+    form_values = {
+        "amount": amount_raw,
+        "category": category_raw,
+        "date": date_raw,
+        "description": description_raw,
+    }
+    errors = {}
+
+    amount_value = None
+    if not amount_raw:
+        errors["amount"] = "Amount must be a positive number."
+    else:
+        try:
+            amount_value = float(amount_raw)
+        except ValueError:
+            errors["amount"] = "Amount must be a positive number."
+        else:
+            if amount_value <= 0:
+                errors["amount"] = "Amount must be a positive number."
+
+    if not category_raw or category_raw not in CATEGORIES:
+        errors["category"] = "Please choose a valid category."
+
+    date_value = None
+    if not date_raw:
+        errors["date"] = "Please enter a valid date."
+    else:
+        try:
+            date_value = datetime.strptime(date_raw, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            errors["date"] = "Please enter a valid date."
+
+    if errors:
+        return render_template(
+            "expenses_add.html",
+            categories=CATEGORIES,
+            errors=errors,
+            form_values=form_values,
+        )
+
+    create_expense(
+        session["user_id"],
+        amount_value,
+        category_raw,
+        date_value,
+        description_raw or None,
+    )
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")

@@ -313,6 +313,27 @@ def create_user(name, email, password):
         conn.close()
 
 
+def create_expense(user_id, amount, category, date, description):
+    """Insert a new expense for user_id.
+
+    Trusts the caller to have already validated amount/category/date —
+    this function does not re-validate format. Returns the new expense's id.
+    """
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO expenses (user_id, amount, category, date, description)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (user_id, amount, category, date, description),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
 def _build_sample_expenses(user_id):
     """Return 8 (user_id, amount, category, date, description) rows.
 
