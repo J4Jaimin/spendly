@@ -142,7 +142,7 @@
 
 .recent-row {
     display: grid;
-    grid-template-columns: 90px 130px 1fr 90px;
+    grid-template-columns: 90px 130px 1fr 90px 32px;
     align-items: center;
     gap: 1rem;
     padding: 0.85rem 0;
@@ -174,6 +174,21 @@
     font-variant-numeric: tabular-nums;
 }
 
+.recent-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.recent-actions a {
+    display: inline-flex;
+    color: var(--ink-faint);
+    transition: color 0.2s;
+}
+
+.recent-actions a:hover {
+    color: var(--ink);
+}
+
 @media (max-width: 600px) {
     .filter-bar {
         flex-direction: column;
@@ -198,5 +213,9 @@
     .recent-date,
     .recent-amount {
         text-align: left;
+    }
+    .recent-actions {
+        justify-content: flex-start;
+        padding-top: 0.25rem;
     }
 }

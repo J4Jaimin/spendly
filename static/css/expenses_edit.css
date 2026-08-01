@@ -1,0 +1,39 @@
+/* Edit-expense page — layout specific to /expenses/<id>/edit.
+   Shared component classes (.page-section, .page-container, .page-header,
+   .page-title, .form-group, .form-input, .btn-primary, .btn-ghost, .panel)
+   live in style.css. */
+
+.expenses-edit-container {
+    max-width: 32rem;
+}
+
+.expenses-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.field-optional {
+    color: var(--ink-muted);
+    font-weight: 400;
+}
+
+.field-error {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--danger);
+}
+
+@media (max-width: 600px) {
+    .expenses-edit-actions {
+        flex-direction: column-reverse;
+    }
+    .expenses-edit-actions .btn-ghost,
+    .expenses-edit-actions .btn-primary {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}

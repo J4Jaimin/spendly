@@ -71,6 +71,9 @@
                         </span>
                         <span class="recent-description">{{ expense.description }}</span>
                         <span class="recent-amount">{{ expense.amount_display }}</span>
+                        <span class="recent-actions">
+                            <a href="{{ url_for('edit_expense', id=expense.id) }}" aria-label="Edit expense">{{ icon('pencil') }}</a>
+                        </span>
                     </div>
                     {% endfor %}
                 </div>
@@ -128,6 +131,9 @@
                     </span>
                     <span class="recent-description">{{ expense.description }}</span>
                     <span class="recent-amount">{{ expense.amount_display }}</span>
+                    <span class="recent-actions">
+                        <a href="{{ url_for('edit_expense', id=expense.id) }}" aria-label="Edit expense">{{ icon('pencil') }}</a>
+                    </span>
                 </div>
                 {% endfor %}
                 {% else %}

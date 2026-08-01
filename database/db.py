@@ -334,6 +334,32 @@ def create_expense(user_id, amount, category, date, description):
         conn.close()
 
 
+def get_expense_by_id(id):
+    """Return the expense row matching id, or None if no such expense."""
+    conn = get_db()
+    try:
+        return conn.execute("SELECT * FROM expenses WHERE id = ?", (id,)).fetchone()
+    finally:
+        conn.close()
+
+
+def update_expense(id, user_id, amount, category, date, description):
+    """Update an existing expense in place, scoped to user_id for defense in depth."""
+    conn = get_db()
+    try:
+        conn.execute(
+            """
+            UPDATE expenses
+            SET amount = ?, category = ?, date = ?, description = ?
+            WHERE id = ? AND user_id = ?
+            """,
+            (amount, category, date, description, id, user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _build_sample_expenses(user_id):
     """Return 8 (user_id, amount, category, date, description) rows.
 
