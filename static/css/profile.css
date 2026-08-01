@@ -142,7 +142,7 @@
 
 .recent-row {
     display: grid;
-    grid-template-columns: 90px 130px 1fr 90px 32px;
+    grid-template-columns: 90px 130px 1fr 90px 64px;
     align-items: center;
     gap: 1rem;
     padding: 0.85rem 0;
@@ -177,6 +177,7 @@
 .recent-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 0.6rem;
 }
 
 .recent-actions a {
@@ -187,6 +188,10 @@
 
 .recent-actions a:hover {
     color: var(--ink);
+}
+
+.recent-actions a.action-danger:hover {
+    color: var(--danger);
 }
 
 @media (max-width: 600px) {

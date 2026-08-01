@@ -490,23 +490,3 @@ def test_post_cannot_override_ownership_via_form_user_id_field(client):
     assert response.status_code == 302
     updated = get_expense_by_id(expense["id"])
     assert updated["user_id"] == user_a
-
-
-# --------------------------------------------------------------------- #
-# Regression — /expenses/<id>/delete remains an untouched stub          #
-# --------------------------------------------------------------------- #
-
-
-def test_delete_route_remains_untouched_stub(client):
-    """This feature (§1 scope decision, §3) must not touch the
-    /expenses/<id>/delete stub, tagged Step 9."""
-    response = client.get("/expenses/1/delete")
-
-    # The stub predates any session guard / DB lookup / template
-    # rendering — it must still behave exactly as it did before this
-    # feature: a plain 200 response, not a redirect to /login and not
-    # a 404, regardless of whether an expense with that id exists or
-    # the caller is logged in.
-    assert response.status_code == 200
-    body = response.get_data(as_text=True)
-    assert "Step 9" in body
