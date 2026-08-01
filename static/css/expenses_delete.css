@@ -1,0 +1,66 @@
+/* Delete-expense confirmation page — layout specific to /expenses/<id>/delete.
+   Shared component classes (.page-section, .page-container, .page-header,
+   .page-title, .btn-primary, .btn-ghost, .btn-danger, .panel) live in
+   style.css. */
+
+.expenses-delete-container {
+    max-width: 32rem;
+}
+
+.expenses-delete-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 0 0 1.25rem;
+}
+
+.expenses-delete-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.expenses-delete-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.expenses-delete-row dt {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+}
+
+.expenses-delete-row dd {
+    font-size: 0.9rem;
+    color: var(--ink);
+    font-weight: 500;
+}
+
+.expenses-delete-warning {
+    background: var(--danger-light);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.expenses-delete-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+@media (max-width: 600px) {
+    .expenses-delete-actions {
+        flex-direction: column-reverse;
+    }
+    .expenses-delete-actions .btn-ghost,
+    .expenses-delete-actions .btn-danger {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}

@@ -360,6 +360,19 @@ def update_expense(id, user_id, amount, category, date, description):
         conn.close()
 
 
+def delete_expense(id, user_id):
+    """Permanently remove an expense, scoped to user_id for defense in depth."""
+    conn = get_db()
+    try:
+        conn.execute(
+            "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+            (id, user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _build_sample_expenses(user_id):
     """Return 8 (user_id, amount, category, date, description) rows.
 
