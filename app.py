@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, session, abort
@@ -11,7 +12,7 @@ from database.db import (
 )
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-key-change-in-production"  # dev-only; no secrets management yet
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
 
 
 @app.after_request
@@ -414,4 +415,6 @@ if __name__ == "__main__":
     with app.app_context():
         init_db()
         seed_db()
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get("PORT", 5001))
+    debug = os.environ.get("RAILWAY_ENVIRONMENT") is None
+    app.run(host="0.0.0.0", port=port, debug=debug)
