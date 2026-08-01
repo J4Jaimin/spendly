@@ -1,6 +1,6 @@
 /* Add-expense page — layout specific to /expenses/add.
    Shared component classes (.page-section, .page-container, .page-header,
-   .page-title, .form-group, .form-input, .btn-submit, .btn-ghost, .panel)
+   .page-title, .form-group, .form-input, .btn-primary, .btn-ghost, .panel)
    live in style.css. */
 
 .expenses-add-container {
@@ -31,8 +31,9 @@
         flex-direction: column-reverse;
     }
     .expenses-add-actions .btn-ghost,
-    .expenses-add-actions .btn-submit {
+    .expenses-add-actions .btn-primary {
         width: 100%;
         text-align: center;
+        justify-content: center;
     }
 }

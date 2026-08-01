@@ -63,6 +63,8 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
+button, input, select, textarea { font: inherit; color: inherit; }
+
 /* ------------------------------------------------------------------ */
 /* Navbar                                                              */
 /* ------------------------------------------------------------------ */
@@ -321,7 +323,9 @@ a { color: inherit; text-decoration: none; }
 /* ------------------------------------------------------------------ */
 
 .btn-primary {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background: var(--ink);
     color: var(--paper);
     padding: 0.65rem 1.5rem;
@@ -330,7 +334,7 @@ a { color: inherit; text-decoration: none; }
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     transition: background 0.2s;
     text-decoration: none;
 }
