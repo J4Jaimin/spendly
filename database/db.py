@@ -4,6 +4,7 @@ All database access lives here. Route handlers in app.py must never
 open a connection or execute SQL directly — call functions from this
 module instead.
 """
+
 import calendar
 import sqlite3
 from datetime import date, datetime, timedelta
@@ -14,8 +15,13 @@ from werkzeug.security import check_password_hash, generate_password_hash
 DB_PATH = Path(__file__).resolve().parent.parent / "expense_tracker.db"
 
 CATEGORIES = [
-    "Food", "Transport", "Bills", "Health",
-    "Entertainment", "Shopping", "Other",
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
 ]
 
 
@@ -34,8 +40,7 @@ def init_db():
     """Create the users and expenses tables if they don't exist yet."""
     conn = get_db()
     try:
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -43,10 +48,8 @@ def init_db():
                 password_hash TEXT NOT NULL,
                 created_at TEXT DEFAULT (datetime('now'))
             )
-            """
-        )
-        conn.execute(
-            """
+            """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS expenses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -57,8 +60,7 @@ def init_db():
                 created_at TEXT DEFAULT (datetime('now')),
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
-            """
-        )
+            """)
         conn.commit()
     finally:
         conn.close()
@@ -95,9 +97,7 @@ def get_user_by_email(email):
     """Return the user row matching email, or None if no such user."""
     conn = get_db()
     try:
-        return conn.execute(
-            "SELECT * FROM users WHERE email = ?", (email,)
-        ).fetchone()
+        return conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     finally:
         conn.close()
 
@@ -106,9 +106,7 @@ def get_user_by_id(user_id):
     """Return the user row matching id, or None if no such user."""
     conn = get_db()
     try:
-        return conn.execute(
-            "SELECT * FROM users WHERE id = ?", (user_id,)
-        ).fetchone()
+        return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     finally:
         conn.close()
 
@@ -155,11 +153,13 @@ def get_category_breakdown(user_id):
     for category in CATEGORIES:
         total = totals_by_category.get(category, 0)
         percentage = (total / grand_total * 100) if grand_total > 0 else 0
-        breakdown.append({
-            "category": category,
-            "total": total,
-            "percentage": percentage,
-        })
+        breakdown.append(
+            {
+                "category": category,
+                "total": total,
+                "percentage": percentage,
+            }
+        )
 
     breakdown.sort(key=lambda entry: entry["total"], reverse=True)
     return breakdown
